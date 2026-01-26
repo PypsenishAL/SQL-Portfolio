@@ -1,4 +1,4 @@
-# Case Study #1 - Danny's Diner :ramen:
+# Danny's Diner Project:
 
 ## Problem Statement
 
@@ -13,25 +13,16 @@ Each of the following case study questions can be answered using a single SQL st
 #### 1. What is the total amount each customer spent at the restaurant?
 
 ````sql
-SET
-  search_path = dannys_diner;
-SELECT
-  customer_id,
-  SUM(price) as total_spent
-FROM
-  sales as s
-  JOIN menu as m ON s.product_id = m.product_id
-GROUP BY
-  1
-ORDER BY
-  1
+select customer_id, sum(price) as total_amount
+from sales inner join menu on sales.product_id = menu.product_id 
+group by customer_id 
   ````
 
-| customer_id | total_spent |
-| ----------- | ----------- |
-| A           | 76          |
-| B           | 74          |
-| C           | 36          |
+|customer_id|total_amount|
+-----------+------------+
+|A          |          76|
+|B          |          74|
+|C          |          36|
 
 ---
 #### 2. How many days has each customer visited the restaurant?
