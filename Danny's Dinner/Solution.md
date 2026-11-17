@@ -19,7 +19,7 @@ group by customer_id
   ````
 
 |customer_id|total_amount|
------------+------------+
+|-----------|------------|
 |A          |          76|
 |B          |          74|
 |C          |          36|
