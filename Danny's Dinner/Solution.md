@@ -13,16 +13,21 @@ Each of the following case study questions can be answered using a single SQL st
 #### 1. What is the total amount each customer spent at the restaurant?
 
 ````sql
-select customer_id, sum(price) as total_amount
-from sales inner join menu on sales.product_id = menu.product_id 
-group by customer_id 
+select m.customer_id, sum(price) as total_spent
+from members m left outer join sales s on m.customer_id = s.customer_id
+left outer join menu on menu.product_id  = s.product_id
+group by m.customer_id
   ````
+
+Name       |Row #1|Row #2|
+-----------+------+------+
+customer_id|A     |B     |
+total_spent|76    |74    |
 
 |customer_id|total_amount|
 |-----------|------------|
 |A          |          76|
 |B          |          74|
-|C          |          36|
 
 ---
 #### 2. How many days has each customer visited the restaurant?
@@ -45,92 +50,30 @@ ORDER BY
 | ----------- | ---------------- |
 | A           | 4                |
 | B           | 6                |
-| C           | 2                |
 
 ---
 
 #### 3. What was the first item from the menu purchased by each customer?
 
-To get the first item we need to rank the items ordered by each customer in a temporary table using `WITH` statement. 
-
-After we have those ranks, we can select the rows with the rank = 1. As the customer A made two orders at the first day, we need to use `ORDER BY` in the window function by two criteria: `order_date` and `product_id`.
-
-In the final query I cast date as `varchar` to remove time ans show the date only.
+In order to solve this problem I've used first_value window-function.
 
 ````sql
-SET
-  search_path = dannys_diner;
-WITH ranked AS (
-    SELECT
-      customer_id,
-      product_name,
-      order_date,
-      row_number() OVER (
-        PARTITION BY customer_id
-        ORDER BY
-          order_date,
-          s.product_id
-      ) AS rank
-    FROM
-      sales AS s
-      JOIN menu AS m ON s.product_id = m.product_id
-  )
-SELECT
-  customer_id,
-  product_name,
-  order_date::varchar
-FROM
-  ranked
-WHERE
-  rank = 1
+select distinct members.customer_id, 
+first_value(product_name) over (partition by sales.customer_id order by order_date) as first_product
+from members left outer join sales on members.customer_id = sales.customer_id
+left outer join menu on menu.product_id = sales.product_id
+order by members.customer_id
 ````  
 
 | customer_id | product_name | order_date |
 | ----------- | ------------ | ---------- |
 | A           | sushi        | 2021-01-01 |
 | B           | curry        | 2021-01-01 |
-| C           | ramen        | 2021-01-01 |
 
----
-
-The query without using window functions, returns two results for customer A, one result for customer B and two results for customer C:
-
-````sql
-SELECT
-  customer_id,
-  product_name,
-  order_date::varchar
-FROM
-  dannys_diner.sales
-  JOIN dannys_diner.menu ON dannys_diner.sales.product_id = dannys_diner.menu.product_id
-WHERE
-  order_date IN (
-    SELECT
-      order_date
-    FROM
-      dannys_diner.sales
-    LIMIT
-      1
-  )
-ORDER BY
-  1
-  ````
-  
-| customer_id | product_name | order_date |
-| ----------- | ------------ | ---------- |
-| A           | sushi        | 2021-01-01 |
-| A           | curry        | 2021-01-01 |
-| B           | curry        | 2021-01-01 |
-| C           | ramen        | 2021-01-01 |
-| C           | ramen        | 2021-01-01 |
-
----  
   
 ***The first purchase for customer A was :sushi:***
 
 ***The first purchase for customer B was :curry:***
-
-***The first (and the only) purchase for customer C was :ramen:***
 
 #### 4. What is the most purchased item on the menu and how many times was it purchased by all customers?
 
