@@ -146,41 +146,21 @@ where ranker = 1
 
 #### 6. Which item was purchased first by the customer after they became a member?
 
-Let's consider that if the purchase date matches the membership date, then the purchase made on this date, was the first customer's purchase as a member. 
-It means that we need to include this date in the WHERE statement.
+Problem was solved using correlated subquery for each customer_id
 
 ````sql
 SET
   search_path = dannys_diner;
-WITH ranked AS (
-    SELECT
-      s.customer_id,
-      order_date,
-      join_date,
-      product_name,
-      row_number() OVER (
-        PARTITION BY s.customer_id
-        ORDER BY
-          order_date
-      ) AS rank
-    FROM
-      sales AS s
-      JOIN members AS mm ON s.customer_id = mm.customer_id
-      JOIN menu AS m ON s.product_id = m.product_id
-    WHERE
-      order_date >= join_date
-  )
-SELECT
-  customer_id,
-  join_date::varchar,
-  order_date::varchar,
-  product_name
-FROM
-  ranked AS r
-WHERE
-  rank = 1
-ORDER BY
-  1
+select
+	customer_id,
+	(select 
+		first_value(product_name) over ()
+		from sales inner join menu on sales.product_id = menu.product_id
+	where 
+		(sales.order_date >= members.join_date) 
+		and (sales.customer_id = members.customer_id)
+	limit 1) as first_purchased_product
+from members
   ````
 
 | customer_id | join_date  | order_date | product_name |
@@ -192,43 +172,31 @@ ORDER BY
 
 #### 7. Which item was purchased just before the customer became a member?
 
-Customer A purchased their membership on January, 7 - and they placed an order that day. 
-We do not have time and therefore can not say exactly if this purchase was made before of after they became a member. 
-Let's consider that if the purchase date matches the membership date, then the purchase made on this date, was the first customer's purchase as a member. 
-It means that we need to exclude this date in the `WHERE` statement.
-
 ````sql
 SET
   search_path = dannys_diner;
-WITH ranked AS (
-    SELECT
-      s.customer_id,
-      order_date,
-      join_date,
-      product_name,
-      rank() OVER (
-        PARTITION BY s.customer_id
-        ORDER BY
-          order_date DESC
-      ) AS rank
-    FROM
-      sales AS s
-      JOIN members AS mm ON s.customer_id = mm.customer_id
-      JOIN menu AS m ON s.product_id = m.product_id
-    WHERE
-      order_date < join_date
-  )
-SELECT
-  customer_id,
-  join_date::varchar,
-  order_date::varchar,
-  product_name
-FROM
-  ranked AS r
-WHERE
-  rank = 1
-ORDER BY
-  1
+with cte as (
+	select distinct members.customer_id, 
+	join_date, 
+	order_date,
+	product_name,
+	dense_rank() over (
+		partition by members.customer_id order by order_date desc
+	) as ranker
+from 
+	members left outer join sales on members.customer_id = sales.customer_id 
+	left outer join menu on menu.product_id = sales.product_id
+where
+	join_date > order_date
+order by customer_id
+)
+select customer_id, 
+	   join_date, 
+	   order_date,
+	   product_name
+from cte
+where 
+ranker = 1
   ````
 
 | customer_id | join_date  | order_date | product_name |
@@ -238,9 +206,6 @@ ORDER BY
 | B           | 2021-01-09 | 2021-01-04 | sushi        |
 
 ---
-
-Customer A purchased two items on January, 1 - the date before they became a member. 
-We need more information to tell exactly what item was purchased before they became a member: order number or purchase time. I am keeping two items in the list for now.
 
 ***Customer A purchased :curry: and :sushi: on 2021-01-01***
 
