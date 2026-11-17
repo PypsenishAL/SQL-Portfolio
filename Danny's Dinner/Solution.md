@@ -19,10 +19,6 @@ left outer join menu on menu.product_id  = s.product_id
 group by m.customer_id
   ````
 
-Name       |Row #1|Row #2|
------------+------+------+
-customer_id|A     |B     |
-total_spent|76    |74    |
 
 |customer_id|total_amount|
 |-----------|------------|
@@ -80,28 +76,22 @@ order by members.customer_id
 ````sql
 SET
   search_path = dannys_diner;
-WITH totals AS (
-    SELECT
-      product_name,
-      COUNT(product_name) AS total_purchase_quantity,
-      row_number() OVER() AS rank
-    FROM
-      sales AS s
-      JOIN menu AS m ON s.product_id = m.product_id
-    GROUP BY
-      1
-  )
-SELECT
-  product_name,
-  total_purchase_quantity
-FROM
-  totals
-WHERE
-  rank = 1
+
+select 
+	product_name, 
+	count(*) as total_purchased
+from menu inner join sales 
+	on menu.product_id  = sales.product_id 
+	
+group by product_name
+order by count(*) desc
+limit 1
   ````
+
  | product_name | total_purchase_quantity |
-| ------------ | ----------------------- |
-| ramen        | 8                       |
+ | ------------ | ----------------------- |
+ | ramen        | 8                       |
+
 
 ---
  
@@ -109,67 +99,35 @@ WHERE
 
 #### 5. Which item was the most popular for each customer?
 
-Let's look at all the results sorted by purchase frequency:
+We can select the most popular products for each customer using `rank` window function:
 
 ````sql
 SET
   search_path = dannys_diner;
-SELECT
-  customer_id,
-  product_name,
-  COUNT(product_name) AS total_purchase_quantity
-FROM
-  sales AS s
-  INNER JOIN menu AS m ON s.product_id = m.product_id
-GROUP BY
-  customer_id,
-  product_name
-ORDER BY
-  total_purchase_quantity DESC
-````
-
-| customer_id | product_name | total_purchase_quantity |
-| ----------- | ------------ | ----------------------- |
-| C           | ramen        | 3                       |
-| A           | ramen        | 3                       |
-| B           | curry        | 2                       |
-| B           | sushi        | 2                       |
-| B           | ramen        | 2                       |
-| A           | curry        | 2                       |
-| A           | sushi        | 1                       |
-
----
-
-Now we can select the most popular products for each customer using `rank` window function:
-
-````sql
-SET
-  search_path = dannys_diner;
-WITH ranked AS (
-    SELECT
-      customer_id,
-      product_name,
-      COUNT(product_name) AS total_purchase_quantity,
-      rank() OVER (
-        PARTITION BY customer_id
-        ORDER BY
-          COUNT(product_name) desc
-      ) AS rank
-    FROM
-      sales AS s
-      JOIN menu AS m ON s.product_id = m.product_id
-    GROUP BY
-      customer_id,
-      product_name
-  )
-SELECT
-  customer_id,
-  product_name,
-  total_purchase_quantity
-FROM
-  ranked
-WHERE
-  rank = 1
+with cte as (
+	select
+  members.customer_id,
+  menu.product_name, count(product_name) as total_purchased
+	from
+	members left outer join sales
+	on members.customer_id = sales.customer_id 
+	left outer join menu on sales.product_id = menu.product_id 
+	group by
+  members.customer_id, menu.product_name 
+),  ranker_cte as (select 
+                   customer_id,
+                   product_name,
+                   total_purchased, 
+			dense_rank() over (
+                      partition by
+                      customer_id
+                      order by
+                      total_purchased desc) as ranker
+		from cte
+)
+select customer_id, product_name, total_purchased
+from ranker_cte
+where ranker = 1
  ```` 
  
 | customer_id | product_name | total_purchase_quantity |
@@ -178,7 +136,6 @@ WHERE
 | B           | ramen        | 2                       |
 | B           | curry        | 2                       |
 | B           | sushi        | 2                       |
-| C           | ramen        | 3                       |
 
 ---
  
@@ -186,7 +143,6 @@ WHERE
 
 ***The most popular item for customer B was :curry:, :ramen: and :sushi:, they purchased each dish 2 times.***
 
-***The most popular item for customer C was :ramen:, they purchased it 3 times.***
 
 #### 6. Which item was purchased first by the customer after they became a member?
 
