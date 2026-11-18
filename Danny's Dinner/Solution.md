@@ -265,57 +265,43 @@ group by
 #### 10. In the first week after a customer joins the program (including their join date) they earn 2x points on all items, not just sushi - how many points do customer A and B have at the end of January?
 
 First we need to count points as usual: 10 points for each dollar spent on :curry: and :ramen: and 20 points for each dollar spent on :sushi:. 
-We add this calculation to the `CTE` using `WITH` statement. Next we use this `CTE` to add extra 10 points for all the purchases of :curry: and :ramen: made by customers on the first week of their membership and return the sum of new points. The points for :sushi: remain the same - 20 points.
+We add this calculation to the `CTE` using `WITH` statement.
 
 ````sql
 SET
   search_path = dannys_diner;
-WITH count_points AS (
-    SELECT
-      s.customer_id,
-      order_date,
-      join_date,
-      product_name,
-      SUM(point) AS point
-    FROM
-      sales AS s
-      JOIN (
-        SELECT
-          product_id,
-          product_name,
-          CASE
-            WHEN product_name = 'sushi' THEN price * 20
-            ELSE price * 10
-          END AS point
-        FROM
-          menu AS m
-      ) AS p ON s.product_id = p.product_id
-      JOIN members AS mm ON s.customer_id = mm.customer_id
-    GROUP BY
-      s.customer_id,
-      order_date,
-      join_date,
-      product_name,
-      point
-  )
-SELECT
-  customer_id,
-  SUM(
-    CASE
-      WHEN order_date >= join_date
-      AND order_date < join_date + (7 * INTERVAL '1 day')
-      AND product_name != 'sushi' THEN point * 2
-      ELSE point
-    END
-  ) AS new_points
-FROM
-  count_points
-WHERE
-  DATE_PART('month', order_date) = 1
-GROUP BY
-  1
-ORDER BY
-  1
+with cte as (
+select 
+	members.customer_id,
+	order_date,
+    join_date,
+    product_name,
+	sum(case 
+			when product_name = 'sushi' then price * 10 * 2
+			else price * 10
+		end) as total_points
+	from members left outer join sales on members.customer_id = sales.customer_id 
+	left outer join menu on menu.product_id = sales.product_id 
+group by 
+	members.customer_id,
+	order_date,
+    join_date,
+    product_name
+)
+select 
+	customer_id,
+	sum(case
+		when order_date >= join_date
+		and order_date < join_date + interval '1 week'
+		and product_name != 'sushi' then total_points * 2
+		else total_points
+	end
+	) as adjusted_total_points
+from cte
+where
+	extract('month' from order_date) = 1
+group by customer_id
+order by customer_id
   ````
 
 | customer_id | new_points |
@@ -328,120 +314,3 @@ ORDER BY
 ***Customer A at the end of January would have 1370 points***
 
 ***Customer B at the end of January would have 820 points*** and 0 benefits from their first week membership
-
-## Bonus Questions
-
-### Join All The Things
-
-````sql
-SET
-  search_path = dannys_diner;
-WITH members AS (
-    SELECT
-      s.customer_id,
-      order_date,
-      product_name,
-      price,
-      join_date
-    FROM
-      sales AS s
-      JOIN menu AS m ON s.product_id = m.product_id
-      LEFT JOIN members AS mm ON s.customer_id = mm.customer_id
-  )
-SELECT
-  customer_id,
-  order_date::varchar,
-  product_name,
-  price,
-  CASE
-    WHEN order_date >= join_date THEN 'Y'
-    ELSE 'N'
-  END AS member
-FROM
-  members
-ORDER BY
-  1,
-  2,
-  3
-````
-
-| customer_id | order_date | product_name | price | member |
-| ----------- | ---------- | ------------ | ----- | ------ |
-| A           | 2021-01-01 | curry        | 15    | N      |
-| A           | 2021-01-01 | sushi        | 10    | N      |
-| A           | 2021-01-07 | curry        | 15    | Y      |
-| A           | 2021-01-10 | ramen        | 12    | Y      |
-| A           | 2021-01-11 | ramen        | 12    | Y      |
-| A           | 2021-01-11 | ramen        | 12    | Y      |
-| B           | 2021-01-01 | curry        | 15    | N      |
-| B           | 2021-01-02 | curry        | 15    | N      |
-| B           | 2021-01-04 | sushi        | 10    | N      |
-| B           | 2021-01-11 | sushi        | 10    | Y      |
-| B           | 2021-01-16 | ramen        | 12    | Y      |
-| B           | 2021-02-01 | ramen        | 12    | Y      |
-| C           | 2021-01-01 | ramen        | 12    | N      |
-| C           | 2021-01-01 | ramen        | 12    | N      |
-| C           | 2021-01-07 | ramen        | 12    | N      |
-
----
-
-### Rank All The Things
-
-First we need to select all the necessary columns from `sales`, `menu` and `members` tables - we do that using CTE and `WITH` statement.
-Next we can rank orders from this table by `customer_id` and `member` columns.
-
-````sql
-SET
-  search_path = dannys_diner;
-WITH members AS (
-    SELECT
-      s.customer_id,
-      order_date::varchar,
-      product_name,
-      price,
-      CASE
-        WHEN order_date >= join_date THEN 'Y'
-        ELSE 'N'
-      END AS member
-    FROM
-      sales AS s
-      JOIN menu AS m ON s.product_id = m.product_id
-      LEFT JOIN members AS mm ON s.customer_id = mm.customer_id
-  )
-SELECT
-  *,
-  CASE
-    WHEN member = 'Y' THEN rank() OVER (
-      PARTITION BY customer_id,
-      member
-      ORDER BY
-        order_date
-    )
-  END AS ranking
-FROM
-  members
-ORDER BY
-  customer_id,
-  order_date,
-  product_name
-  ````
- 
- | customer_id | order_date | product_name | price | member | ranking |
-| ----------- | ---------- | ------------ | ----- | ------ | ------- |
-| A           | 2021-01-01 | curry        | 15    | N      |         |
-| A           | 2021-01-01 | sushi        | 10    | N      |         |
-| A           | 2021-01-07 | curry        | 15    | Y      | 1       |
-| A           | 2021-01-10 | ramen        | 12    | Y      | 2       |
-| A           | 2021-01-11 | ramen        | 12    | Y      | 3       |
-| A           | 2021-01-11 | ramen        | 12    | Y      | 3       |
-| B           | 2021-01-01 | curry        | 15    | N      |         |
-| B           | 2021-01-02 | curry        | 15    | N      |         |
-| B           | 2021-01-04 | sushi        | 10    | N      |         |
-| B           | 2021-01-11 | sushi        | 10    | Y      | 1       |
-| B           | 2021-01-16 | ramen        | 12    | Y      | 2       |
-| B           | 2021-02-01 | ramen        | 12    | Y      | 3       |
-| C           | 2021-01-01 | ramen        | 12    | N      |         |
-| C           | 2021-01-01 | ramen        | 12    | N      |         |
-| C           | 2021-01-07 | ramen        | 12    | N      |         |
-
----
