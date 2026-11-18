@@ -33,36 +33,17 @@ FROM
 Let's count how many unique customers we have:
 
 ````sql
-SELECT
-  COUNT(DISTINCT customer_id) AS unique_customers
-FROM
-  pizza_runner.customer_orders
+select
+  count(
+        distinct co.order_id
+) as total_ordered_pizzas
+from
+  customer_orders co 
   ````
 
-| unique_customers |
+| unique_customer_orders |
 | ---------------- |
-| 5                |
-
-
-Now we can count how many orders each customer made. This query includes all orders, successful ones and cancelled ones.
-
-````sql
-SELECT
-  customer_id,
-  COUNT(DISTINCT order_id) AS unique_customer_orders
-FROM
-  pizza_runner.customer_orders
-GROUP BY
-  customer_id
-  ````
-  
-| customer_id | unique_customer_orders |
-| ----------- | ---------------------- |
-| 101         | 3                      |
-| 102         | 2                      |
-| 103         | 2                      |
-| 104         | 2                      |
-| 105         | 1                      |
+| 10                |
 
 
 #### 3. How many successful orders were delivered by each runner?
