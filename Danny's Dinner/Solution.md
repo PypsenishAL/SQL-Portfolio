@@ -214,25 +214,21 @@ ranker = 1
 #### 8. What is the total items and amount spent for each member before they became a member?
 
 Let's consider that if the purchase date matches the membership date, then the purchase made on this date, was the first customer's purchase as a member. 
-It means that we need to exclude this date in the WHERE statement.
 
 ````sql
 SET
   search_path = dannys_diner;
-SELECT
-  s.customer_id,
-  COUNT(product_name) AS total_number_of_items,
-  SUM(price) AS total_purchase_amount
-FROM
-  sales AS s
-  JOIN members AS mm ON s.customer_id = mm.customer_id
-  JOIN menu AS m ON s.product_id = m.product_id
-WHERE
-  order_date < join_date
-GROUP BY
-  1
-ORDER BY
-  1
+select
+	members.customer_id, count(product_name) as total_items, sum(price) as total_spent
+from 
+	members left outer join sales on members.customer_id = sales.customer_id
+	left outer join menu on menu.product_id = sales.product_id
+where
+	order_date < join_date
+group by 
+	members.customer_id
+order by 
+	members.customer_id
   ````
 
 | customer_id | total_number_of_items | total_purchase_amount |
@@ -247,32 +243,22 @@ ORDER BY
 ````sql
 SET
   search_path = dannys_diner;
-SELECT
-  customer_id,
-  SUM(point) AS points
-FROM
-  sales AS s
-  JOIN (
-    SELECT
-      product_id,
-      CASE
-        WHEN product_id = 1 THEN price * 20
-        ELSE price * 10
-      END AS point
-    FROM
-      menu
-  ) AS p ON s.product_id = p.product_id
-GROUP BY
-  1
-ORDER BY
-  1
+select 
+	members.customer_id, 
+	sum(case 
+			when product_name = 'sushi' then price * 10 * 2
+			else price * 10
+		end) as total_points
+	from members left outer join sales on members.customer_id = sales.customer_id 
+	left outer join menu on menu.product_id = sales.product_id 
+group by 
+	members.customer_id 
   ````
 
 | customer_id | points |
 | ----------- | ------ |
 | A           | 860    |
 | B           | 940    |
-| C           | 360    |
 
 ---
 
