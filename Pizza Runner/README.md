@@ -1,6 +1,5 @@
-# Case Study #2 - Pizza Runner ::pizza::
+# Case Study #2 - Pizza Runner
 
-<img src="https://user-images.githubusercontent.com/98699089/156214170-bbca7608-9291-405f-aefa-be2796fc4355.png" width="500">
 
 Danny requires further assistance to clean his data and apply some basic calculations so he can better direct his runners and optimise Pizza Runner’s operations.
 
@@ -107,79 +106,3 @@ This table contains all of the `topping_name` values with their corresponding `t
 ## Entity Relationship Diagram
 
 ![изображение](https://user-images.githubusercontent.com/98699089/156217477-8e823838-4a49-4936-9206-afa3cdeda699.png)
-
-## Table of Contents
-
-[Introduction](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#introduction)
-
-[Case Study Questions](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#case-study-questions)
-
-[A. Pizza Metrics](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#a-pizza-metrics)
-
-[1. How many pizzas were ordered?](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#1-how-many-pizzas-were-ordered)
-
-[2. How many unique customer orders were made?](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#2-how-many-unique-customer-orders-were-made)
-
-[3. How many successful orders were delivered by each runner?](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#3-how-many-successful-orders-were-delivered-by-each-runner)
-
-[4. How many of each type of pizza was delivered?](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#4-how-many-of-each-type-of-pizza-was-delivered)
-
-[5. How many Vegetarian and Meatlovers were ordered by each customer?](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#5-how-many-vegetarian-and-meatlovers-were-ordered-by-each-customer)
-
-[6. What was the maximum number of pizzas delivered in a single order?](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#6-what-was-the-maximum-number-of-pizzas-delivered-in-a-single-order)
-
-[7. For each customer, how many delivered pizzas had at least 1 change and how many had no changes?](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#7-for-each-customer-how-many-delivered-pizzas-had-at-least-1-change-and-how-many-had-no-changes)
-
-[8. How many pizzas were delivered that had both exclusions and extras?](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#8-how-many-pizzas-were-delivered-that-had-both-exclusions-and-extras)
-
-[9. What was the total volume of pizzas ordered for each hour of the day?](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#9-what-was-the-total-volume-of-pizzas-ordered-for-each-hour-of-the-day)
-
-[10. What was the volume of orders for each day of the week?](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#10-what-was-the-volume-of-orders-for-each-day-of-the-week)
-
-[B. Runner and Customer Experience](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#b-runner-and-customer-experience)
-
-[1. How many runners signed up for each 1 week period? (i.e. week starts 2021-01-01)](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#1-how-many-runners-signed-up-for-each-1-week-period-ie-week-starts-2021-01-01)
-
-[2. What was the average time in minutes it took for each runner to arrive at the Pizza Runner HQ to pickup the order?](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#2-what-was-the-average-time-in-minutes-it-took-for-each-runner-to-arrive-at-the-pizza-runner-hq-to-pickup-the-order)
-
-[3. Is there any relationship between the number of pizzas and how long the order takes to prepare?](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#3-is-there-any-relationship-between-the-number-of-pizzas-and-how-long-the-order-takes-to-prepare)
-
-[4. What was the average distance travelled for each customer?](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#4-what-was-the-average-distance-travelled-for-each-customer)
-
-[5. What was the difference between the longest and shortest delivery times for all orders?](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#5-what-was-the-difference-between-the-longest-and-shortest-delivery-times-for-all-orders)
-
-[6. What was the average speed for each runner for each delivery and do you notice any trend for these values?](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#6-what-was-the-average-speed-for-each-runner-for-each-delivery-and-do-you-notice-any-trend-for-these-values)
-
-[7. What is the successful delivery percentage for each runner?](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#7-what-is-the-successful-delivery-percentage-for-each-runner)
-
-[C. Ingredient Optimisation](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#c-ingredient-optimisation)
-
-[1. What are the standard ingredients for each pizza?](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#1-what-are-the-standard-ingredients-for-each-pizza)
-
-[2. What was the most commonly added extra?](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#2-what-was-the-most-commonly-added-extra)
-
-[3. What was the most common exclusion?](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#3-what-was-the-most-common-exclusion)
-
-[4. Generate an order item for each record in the customers_orders table in the format of one of the following:](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#4-generate-an-order-item-for-each-record-in-the-customers_orders-table-in-the-format-of-one-of-the-following)
-
-[5. Generate an alphabetically ordered comma separated ingredient list for each pizza order from the customer_orders table and add a 2x in front of any relevant ingredients](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#5-generate-an-alphabetically-ordered-comma-separated-ingredient-list-for-each-pizza-order-from-the-customer_orders-table-and-add-a-2x-in-front-of-any-relevant-ingredients)
-
-[6. What is the total quantity of each ingredient used in all delivered pizzas sorted by most frequent first?](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#6-what-is-the-total-quantity-of-each-ingredient-used-in-all-delivered-pizzas-sorted-by-most-frequent-first)
-
-[D. Pricing and Ratings](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#d-pricing-and-ratings)
-
-[1. If a Meat Lovers pizza costs $12 and Vegetarian costs $10 and there were no charges for changes - how much money has Pizza Runner made so far if there are no delivery fees?](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#1-if-a-meat-lovers-pizza-costs-12-and-vegetarian-costs-10-and-there-were-no-charges-for-changes---how-much-money-has-pizza-runner-made-so-far-if-there-are-no-delivery-fees)
-
-[2. What if there was an additional $1 charge for any pizza extras?](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#2-what-if-there-was-an-additional-1-charge-for-any-pizza-extras)
-
-[- Add cheese is $1 extra](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#--add-cheese-is-1-extra)
-
-[3. The Pizza Runner team now wants to add an additional ratings system that allows customers to rate their runner, how would you design an additional table for this new dataset - generate a schema for this new table and insert your own data for ratings for each successful customer order between 1 to 5.](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#3-the-pizza-runner-team-now-wants-to-add-an-additional-ratings-system-that-allows-customers-to-rate-their-runner-how-would-you-design-an-additional-table-for-this-new-dataset---generate-a-schema-for-this-new-table-and-insert-your-own-data-for-ratings-for-each-successful-customer-order-between-1-to-5)
-
-[4. Using your newly generated table - can you join all of the information together to form a table which has the following information for successful deliveries?](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#4-using-your-newly-generated-table---can-you-join-all-of-the-information-together-to-form-a-table-which-has-the-following-information-for-successful-deliveries)
-
-[5. If a Meat Lovers pizza was $12 and Vegetarian $10 fixed prices with no cost for extras and each runner is paid $0.30 per kilometre traveled - how much money does Pizza Runner have left over after these deliveries?](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#5-if-a-meat-lovers-pizza-was-12-and-vegetarian-10-fixed-prices-with-no-cost-for-extras-and-each-runner-is-paid-030-per-kilometre-traveled---how-much-money-does-pizza-runner-have-left-over-after-these-deliveries)
-
-[E. Bonus Questions](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#e-bonus-questions)
-
-[If Danny wants to expand his range of pizzas - how would this impact the existing data design? Write an INSERT statement to demonstrate what would happen if a new Supreme pizza with all the toppings was added to the Pizza Runner menu?](https://github.com/muryulia/8-Week-SQL-Challenge/blob/main/Case%20Study%20%232%20-%20Pizza%20Runner/Solution.md/#if-danny-wants-to-expand-his-range-of-pizzas---how-would-this-impact-the-existing-data-design-write-an-insert-statement-to-demonstrate-what-would-happen-if-a-new-supreme-pizza-with-all-the-toppings-was-added-to-the-pizza-runner-menu)
