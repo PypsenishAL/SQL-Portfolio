@@ -48,44 +48,18 @@ from
 
 #### 3. How many successful orders were delivered by each runner?
 
-According to the case description, some orders can be cancelled.
-Let's find the cancelled orders in the `runner_orders` table.
-
 ````sql
-SELECT
-  *
-FROM
-  pizza_runner.runner_orders
-WHERE
-  length(cancellation) > 0
-  ````
-  
-| order_id | runner_id | pickup_time         | distance | duration  | cancellation            |
-| -------- | --------- | ------------------- | -------- | --------- | ----------------------- |
-| 6        | 3         | null                | null     | null      | Restaurant Cancellation |
-| 7        | 2         | 2020-01-08 21:30:45 | 25km     | 25mins    | null                    |
-| 8        | 2         | 2020-01-10 00:15:02 | 23.4 km  | 15 minute | null                    |
-| 9        | 2         | null                | null     | null      | Customer Cancellation   |
-| 10       | 1         | 2020-01-11 18:50:20 | 10km     | 10minutes | null                    |
-
-
-As we can see, there are two cancelled order: one is cancelled by a customer, the other is cancelled by the restaurant.
-We need to exclude these orders from the query as we want to count successful orders only.
-
-````sql
-SELECT
-  runner_id,
-  COUNT(order_id) AS delivered_orders
-FROM
-  pizza_runner.runner_orders
-WHERE
-  pickup_time != 'null'
-  AND distance != 'null'
-  AND duration != 'null'
-GROUP BY
-  1
-ORDER BY
-  1
+select 
+	runner_orders.runner_id,
+	count(order_id) as total_successful_orders
+from 
+	runners inner join runner_orders
+	on runners.runner_id = runner_orders.runner_id
+where 
+	cancellation is null or cancellation = 'null' or cancellation = ''
+group by 
+	runner_orders.runner_id
+order by runner_id
   ````
   
 | runner_id | delivered_orders |
@@ -98,27 +72,23 @@ ORDER BY
 #### 4. How many of each type of pizza was delivered?
 
 Here we need join the `pizza_names` table and the `runner_orders` table to the customer_orders table.
-We join the `pizza_names` table to get pizza names, and we join the `runner_orders` table to exclude cancelled orders.
 
 ````sql
-SELECT
-  pizza_name,
-  COUNT(pizza_name) AS number_of_pizzas_delivered
-FROM
-  pizza_runner.customer_orders AS c
-  JOIN pizza_runner.pizza_names AS n ON c.pizza_id = n.pizza_id
-  JOIN pizza_runner.runner_orders AS r ON c.order_id = r.order_id
-WHERE
-  pickup_time != 'null'
-  AND distance != 'null'
-  AND duration != 'null'
-GROUP BY
-  1
-ORDER BY
-  1
+select pizza_name, count(*) as total_pizza_orders
+from
+	pizza_names left outer join customer_orders
+	on pizza_names.pizza_id = customer_orders.pizza_id 
+	left outer join runner_orders
+	on runner_orders.order_id = customer_orders.order_id
+where 
+	cancellation is null
+group by 
+	pizza_name
+order by 
+	pizza_name 
   ````
 
-| pizza_name | number_of_pizzas_delivered |
+| pizza_name | total_pizza_orders |
 | ---------- | -------------------------- |
 | Meatlovers | 9                          |
 | Vegetarian | 3                          |
