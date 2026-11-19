@@ -101,18 +101,18 @@ We can calculate the number of ordered pizzas including cancelled orders - all t
 In this case we join the `pizza_names` table to get pizza names:
 
 ````sql
-SELECT
-  customer_id,
-  pizza_name,
-  COUNT(pizza_name) AS number_of_pizzas_delivered
-FROM
-  pizza_runner.customer_orders AS c
-  JOIN pizza_runner.pizza_names AS n ON c.pizza_id = n.pizza_id
-GROUP BY
-  customer_id,
-  pizza_name
-ORDER BY
-  customer_id
+select
+	pizza_name, customer_id,
+	count(order_id) as number_of_pizzas_delivered
+from 
+	pizza_names left outer join customer_orders 
+	on pizza_names.pizza_id = customer_orders.pizza_id
+group by 
+	pizza_name,
+	customer_id
+order by 
+	customer_id, 
+	pizza_name
   ````
   
 | customer_id | pizza_name | number_of_pizzas_delivered |
@@ -137,151 +137,30 @@ ORDER BY
 
 ***Customer with ID 105 ordered 1 Vegetarian pizza***
 
-We can calculate this value excluding cancelled orders. In this case we need to join two tables: `pizza_names` to get pizza names and `runner_orders` to exclude cancelled orders.
-
-````sql
-SELECT
-  customer_id,
-  pizza_name,
-  COUNT(pizza_name) AS number_of_pizzas_delivered
-FROM
-  pizza_runner.customer_orders AS c
-  JOIN pizza_runner.pizza_names AS n ON c.pizza_id = n.pizza_id
-  JOIN pizza_runner.runner_orders AS r ON c.order_id = r.order_id
-WHERE
-  pickup_time != 'null'
-  AND distance != 'null'
-  AND duration != 'null'
-GROUP BY
-  customer_id,
-  pizza_name
-ORDER BY
-  customer_id
-  ````
-  
-| customer_id | pizza_name | number_of_pizzas_delivered |
-| ----------- | ---------- | -------------------------- |
-| 101         | Meatlovers | 2                          |
-| 102         | Meatlovers | 2                          |
-| 102         | Vegetarian | 1                          |
-| 103         | Meatlovers | 2                          |
-| 103         | Vegetarian | 1                          |
-| 104         | Meatlovers | 3                          |
-| 105         | Vegetarian | 1                          |
-
-
-***Customer with ID 101 ordered 2 Meatlovers pizzas***
-
-***Customer with ID 102 ordered 2 Meatlovers pizzas and 1 Vegetarian pizza***
-
-***Customer with ID 103 ordered 2 Meatlovers pizzas and 1 Vegetarian pizza***
-
-***Customer with ID 104 ordered 3 Meatlovers pizzas***
-
-***Customer with ID 105 ordered 1 Vegetarian pizza***
-
 
 #### 6. What was the maximum number of pizzas delivered in a single order?
 
 Let's look at how many items were delivered for each order:
 
 ````sql
-SELECT
-  c.order_id,
-  COUNT(c.order_id) AS items_in_order
-FROM
-  pizza_runner.customer_orders AS c
-  JOIN pizza_runner.runner_orders AS r ON c.order_id = r.order_id
-WHERE
-  pickup_time != 'null'
-  AND distance != 'null'
-  AND duration != 'null'
-GROUP BY
-  c.order_id
-ORDER BY
-  items_in_order DESC
+select
+	customer_orders.order_id,
+	count(customer_orders.order_id) as total_orders
+from
+	runner_orders inner join customer_orders
+	on runner_orders.order_id = customer_orders.order_id
+where cancellation is null
+group by 
+	customer_orders.order_id
+order by  
+	total_orders desc
+limit 1
   ````
 
 | order_id | items_in_order |
 | -------- | -------------- |
 | 4        | 3              |
-| 3        | 2              |
-| 10       | 2              |
-| 7        | 1              |
-| 8        | 1              |
-| 5        | 1              |
-| 2        | 1              |
-| 1        | 1              |
 
-
-Now let's select the maximum number of items in one order (an easy nested query, without window functions which would allow us to include addtional information in the result):
-
-````sql
-SELECT
-  MAX(items_in_order) AS max_items_in_order
-FROM
-  (
-    SELECT
-      c.order_id,
-      COUNT(c.order_id) AS items_in_order
-    FROM
-      pizza_runner.customer_orders AS c
-      JOIN pizza_runner.runner_orders AS r ON c.order_id = r.order_id
-    WHERE
-      pickup_time != 'null'
-      AND distance != 'null'
-      AND duration != 'null'
-    GROUP BY
-      c.order_id
-    ORDER BY
-      items_in_order DESC
-  ) AS count_items
-  ````
-
-| max_items_in_order |
-| ------------------ |
-| 3                  |
-
-
-We can also use `rank` window function to show order ID and customer ID for the maximum pizzas delivered:
-
-````sql
-WITH rank_added AS (
-  SELECT
-    c.order_id,
-    c.customer_id,
-    COUNT(c.order_id) AS items_in_order,
-    rank() OVER (
-      ORDER BY
-        COUNT(c.order_id) DESC
-    ) AS rank
-  FROM
-    pizza_runner.customer_orders AS c
-    JOIN pizza_runner.runner_orders AS r ON c.order_id = r.order_id
-  WHERE
-    pickup_time != 'null'
-    AND distance != 'null'
-    AND duration != 'null'
-  GROUP BY
-    c.order_id,
-    c.customer_id
-)
-SELECT
-  order_id,
-  customer_id,
-  items_in_order
-FROM
-  rank_added
-WHERE
-  rank = 1
-  ````
-  
-| order_id | customer_id | items_in_order |
-| -------- | ----------- | -------------- |
-| 4        | 103         | 3              |
-
-
-***There were maximum 3 pizzas ordered in one order.***
 
 #### 7. For each customer, how many delivered pizzas had at least 1 change and how many had no changes?
 
