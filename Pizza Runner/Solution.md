@@ -164,127 +164,45 @@ limit 1
 
 #### 7. For each customer, how many delivered pizzas had at least 1 change and how many had no changes?
 
-Changes are either exclusions or extras to the ordered pizzas. Let's see how orders with changes look in the table: 
+Changes are either exclusions or extras to the ordered pizzas
 
 ````sql
-SELECT
-  *
-FROM
-  pizza_runner.customer_orders
-WHERE
-  length(extras) > 0
-  OR length(exclusions) > 0
+select 
+	customer_id,
+	coalesce(sum(case 
+		when exclusions is not null or extras is not null then 1
+	end), 0) as count_total_changes,
+	coalesce(sum(case
+		when exclusions is null and extras is null then 1
+	end), 0) as count_total_without_changes
+from 
+	customer_orders inner join runner_orders
+	on runner_orders.order_id = customer_orders.order_id
+where 
+	cancellation is null
+group by 
+	customer_id
   ````
-  
-| order_id | customer_id | pizza_id | exclusions | extras | order_time               |
-| -------- | ----------- | -------- | ---------- | ------ | ------------------------ |
-| 4        | 103         | 1        | 4          |        | 2020-01-04T13:23:46.000Z |
-| 4        | 103         | 1        | 4          |        | 2020-01-04T13:23:46.000Z |
-| 4        | 103         | 2        | 4          |        | 2020-01-04T13:23:46.000Z |
-| 5        | 104         | 1        | null       | 1      | 2020-01-08T21:00:29.000Z |
-| 6        | 101         | 2        | null       | null   | 2020-01-08T21:03:13.000Z |
-| 7        | 105         | 2        | null       | 1      | 2020-01-08T21:20:29.000Z |
-| 8        | 102         | 1        | null       | null   | 2020-01-09T23:54:33.000Z |
-| 9        | 103         | 1        | 4          | 1, 5   | 2020-01-10T11:22:59.000Z |
-| 10       | 104         | 1        | null       | null   | 2020-01-11T18:34:49.000Z |
-| 10       | 104         | 1        | 2, 6       | 1, 4   | 2020-01-11T18:34:49.000Z |
+|customer_id|count_total_changes|count_total_without_changes|
+|-----------|-------------------|---------------------------|
+|        101|                  2|                          0|
+|        102|                  2|                          1|
+|        103|                  3|                          0|
+|        104|                  1|                          2|
+|        105|                  0|                          1|
 
-
-Data type in the extras and exclusions columns is `varchar`, and the values are in the form of NaN (empty values), 'null' - string values or numeric values: single values or separated by commas. I decided to use a regular expression to find numeric values in these columns (thanks, StackOverFlow).
-Another tough thing is that order #4 has 2 duplicated rows - all 2 pizzas in the order have exclusions and these pizzas should be counted separately. But when we use a `GROUP BY` statement, it groups these 2 records into one. So we need to avoid that grouping in advance. We can use CTE and `row_number` window function in the inner query to add a pseudo auto increment which allows us to keep these records separated. 
-
-And one more solution - pre clean extras and exclusions columns as recommended by Danny, remove NaN and 'null' values. I won't do it now. 
-
-````sql
-SELECT
-  customer_id,
-  changes,
-  COUNT(changes) AS number_of_pizzas
-FROM
-  (
-    WITH ranked AS (
-      SELECT
-        *,
-        ROW_NUMBER() OVER () AS rank
-      FROM
-        pizza_runner.customer_orders
-    )
-    SELECT
-      customer_id,
-      c.order_id,
-      CASE
-        WHEN exclusions ~ '^[0-9, ]+$'
-        OR extras ~ '^[0-9, ]+$' THEN 'Have changes'
-        ELSE 'No changes'
-      END AS changes,
-      rank
-    FROM
-      ranked AS c
-      JOIN pizza_runner.runner_orders AS r ON c.order_id = r.order_id
-    WHERE
-      pickup_time != 'null'
-      AND distance != 'null'
-      AND duration != 'null'
-    GROUP BY
-      exclusions,
-      extras,
-      customer_id,
-      c.order_id,
-      rank
-  ) AS changes
-GROUP BY
-  changes,
-  customer_id
-ORDER BY
-  customer_id
-  ````
-  
-| customer_id | changes      | number_of_pizzas |
-| ----------- | ------------ | ---------------- |
-| 101         | No changes   | 2                |
-| 102         | No changes   | 3                |
-| 103         | Have changes | 3                |
-| 104         | Have changes | 2                |
-| 104         | No changes   | 1                |
-| 105         | Have changes | 1                |
-
-
-***Customer with ID 101 ordered 2 pizzas without changes***
-
-***Customer with ID 102 ordered 3 pizzas without changes***
-
-***Customer with ID 103 ordered 3 pizzas with changes***
-
-***Customer with ID 104 ordered 2 pizza with changes***
-
-***Customer with ID 104 ordered 1 pizzas without changes***
-
-***Customer with ID 105 ordered 1 pizza with changes***
-
-***In total, 6 pizzas had changes and 6 pizzas had no changes***
 
 #### 8. How many pizzas were delivered that had both exclusions and extras?
 
 ````sql
-SELECT
-  CASE
-    WHEN exclusions ~ '^[0-9, ]+$'
-    AND extras ~ '^[0-9, ]+$' THEN 'Have exclusions and extras'
-  END AS exclusions_and_extras,
-  COUNT(exclusions) AS number_of_pizzas
-FROM
-  pizza_runner.customer_orders AS c
-  JOIN pizza_runner.runner_orders AS r ON c.order_id = r.order_id
-WHERE
-  pickup_time != 'null'
-  AND distance != 'null'
-  AND duration != 'null'
-GROUP BY
-  exclusions,
-  extras
-HAVING
-  extras ~ '^[0-9, ]+$'
-  AND exclusions ~ '^[0-9, ]+$'
+select 
+	'Have exclusions and extras' as exclusions_and_extras,
+	count(*) as number_of_pizzas
+from 
+	customer_orders inner join runner_orders
+	on runner_orders.order_id = customer_orders.order_id
+where 
+	cancellation is null and exclusions is not null and extras is not null
   ````
   
 | exclusions_and_extras      | number_of_pizzas |
@@ -292,160 +210,19 @@ HAVING
 | Have exclusions and extras | 1                |
 
 
-#### 9. What was the total volume of pizzas ordered for each hour of the day?
+#### 9. What was the volume of orders for each day of the week?
 
 Including cancelled orders:
 
 ````sql
-    SELECT
-      hours,
-      SUM(pizzas_ordered) AS pizzas_ordered
-    FROM
-      (
-        SELECT
-          EXTRACT(
-            hour
-            FROM
-              order_time
-          ) AS hours,
-          COUNT(
-            EXTRACT(
-              hour
-              FROM
-                order_time
-            )
-          ) AS pizzas_ordered
-        FROM
-          pizza_runner.customer_orders AS c
-        GROUP BY
-          order_time
-      ) AS count_hours
-    GROUP BY
-      hours
-    ORDER BY
-      pizzas_ordered DESC, hours
-````
-
-| hours | pizzas_ordered |
-| ----- | -------------- |
-| 13    | 3              |
-| 18    | 3              |
-| 21    | 3              |
-| 23    | 3              |
-| 11    | 1              |
-| 19    | 1              |
-
-
-Excluding cancelled orderes:
-
-````sql
-SELECT
-  hours,
-  SUM(pizzas_ordered) AS pizzas_ordered
-FROM
-  (
-    SELECT
-      EXTRACT(
-        hour
-        FROM
-          order_time
-      ) AS hours,
-      COUNT(
-        EXTRACT(
-          hour
-          FROM
-            order_time
-        )
-      ) AS pizzas_ordered
-    FROM
-      pizza_runner.customer_orders AS c
-      JOIN pizza_runner.runner_orders AS r ON c.order_id = r.order_id
-    WHERE
-      pickup_time != 'null'
-      AND distance != 'null'
-      AND duration != 'null'
-    GROUP BY
-      order_time
-  ) AS count_hours
-GROUP BY
-  hours
-ORDER BY
-  pizzas_ordered DESC, hours 
-  ````
-  
-| hours | pizzas_ordered |
-| ----- | -------------- |
-| 13    | 3              |
-| 18    | 3              |
-| 23    | 3              |
-| 21    | 2              |
-| 19    | 1              |
-
-
-#### 10. What was the volume of orders for each day of the week?
-
-Including cancelled orders:
-
-````sql
-SELECT
-  dow AS day_of_week,
-  SUM(pizzas_ordered) AS pizzas_ordered
-FROM
-  (
-    SELECT
-      CASE
-        WHEN EXTRACT(
-          isodow
-          FROM
-            order_time
-        ) = 1 THEN 'Monday'
-        WHEN EXTRACT(
-          isodow
-          FROM
-            order_time
-        ) = 2 THEN 'Tuesday'
-        WHEN EXTRACT(
-          isodow
-          FROM
-            order_time
-        ) = 3 THEN 'Wednesnday'
-        WHEN EXTRACT(
-          isodow
-          FROM
-            order_time
-        ) = 4 THEN 'Thursday'
-        WHEN EXTRACT(
-          isodow
-          FROM
-            order_time
-        ) = 5 THEN 'Friday'
-        WHEN EXTRACT(
-          isodow
-          FROM
-            order_time
-        ) = 6 THEN 'Saturday'
-        WHEN EXTRACT(
-          isodow
-          FROM
-            order_time
-        ) = 7 THEN 'Sunday'
-      END AS dow,
-      COUNT(
-        EXTRACT(
-          isodow
-          from
-            order_time
-        )
-      ) AS pizzas_ordered
-    FROM
-      pizza_runner.customer_orders AS c
-    GROUP BY
-      order_time
-  ) AS count_dow
-GROUP BY
-  dow
-ORDER BY
-  pizzas_ordered DESC
+select 
+	extract('DOW' from order_time) as day_of_week, 
+	count(*) as total_volume
+from
+	customer_orders
+group by 
+	day_of_week
+order by day_of_week
   ````
   
 | day_of_week | pizzas_ordered |
@@ -455,80 +232,6 @@ ORDER BY
 | Thursday    | 3              |
 | Friday      | 1              |
 
-Excluding cancelled orderes:
-
-````sql
-SELECT
-  dow AS day_of_week,
-  SUM(pizzas_ordered) AS pizzas_ordered
-FROM
-  (
-    SELECT
-      CASE
-        WHEN EXTRACT(
-          isodow
-          FROM
-            order_time
-        ) = 1 THEN 'Monday'
-        WHEN EXTRACT(
-          isodow
-          FROM
-            order_time
-        ) = 2 THEN 'Tuesday'
-        WHEN EXTRACT(
-          isodow
-          FROM
-            order_time
-        ) = 3 THEN 'Wednesnday'
-        WHEN EXTRACT(
-          isodow
-          FROM
-            order_time
-        ) = 4 THEN 'Thursday'
-        WHEN EXTRACT(
-          isodow
-          FROM
-            order_time
-        ) = 5 THEN 'Friday'
-        WHEN EXTRACT(
-          isodow
-          FROM
-            order_time
-        ) = 6 THEN 'Saturday'
-        WHEN EXTRACT(
-          isodow
-          FROM
-            order_time
-        ) = 7 THEN 'Sunday'
-      END AS dow,
-      COUNT(
-        EXTRACT(
-          isodow
-          FROM
-            order_time
-        )
-      ) AS pizzas_ordered
-    FROM
-      pizza_runner.customer_orders AS c
-      JOIN pizza_runner.runner_orders AS r ON c.order_id = r.order_id
-    WHERE
-      pickup_time != 'null'
-      AND distance != 'null'
-      AND duration != 'null'
-    GROUP BY
-      order_time
-  ) AS count_dow
-GROUP BY
-  dow
-ORDER BY
-  pizzas_ordered DESC
-  ````
-  
-| day_of_week | pizzas_ordered |
-| ----------- | -------------- |
-| Saturday    | 5              |
-| Wednesnday  | 4              |
-| Thursday    | 3              |
 
 ### B. Runner and Customer Experience
 
